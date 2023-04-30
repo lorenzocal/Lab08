@@ -11,6 +11,7 @@ import java.util.List;
 import it.polito.tdp.extflightdelays.model.Airline;
 import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Flight;
+import it.polito.tdp.extflightdelays.model.ReducedFlight;
 
 public class ExtFlightDelaysDAO {
 
@@ -80,6 +81,34 @@ public class ExtFlightDelaysDAO {
 						rs.getDouble("ELAPSED_TIME"), rs.getInt("DISTANCE"),
 						rs.getTimestamp("ARRIVAL_DATE").toLocalDateTime(), rs.getDouble("ARRIVAL_DELAY"));
 				result.add(flight);
+			}
+
+			conn.close();
+			return result;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Errore connessione al database");
+			throw new RuntimeException("Error Connection Database");
+		}
+	}
+	
+	public List<ReducedFlight> loadReducedFlights() {
+		String sql = "SELECT ORIGIN_AIRPORT_ID, DESTINATION_AIRPORT_ID, AVG(DISTANCE) AS AVERAGE_DISTANCE "
+				   + "FROM flights "
+				   + "GROUP BY ORIGIN_AIRPORT_ID, DESTINATION_AIRPORT_ID";
+		List<ReducedFlight> result = new LinkedList<ReducedFlight>();
+
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet rs = st.executeQuery();
+
+			while (rs.next()) {
+				ReducedFlight reducedFlight = new ReducedFlight(rs.getInt("ORIGIN_AIRPORT_ID"), 
+																rs.getInt("DESTINATION_AIRPORT_ID"),
+																rs.getDouble("AVERAGE_DISTANCE"));
+				result.add(reducedFlight);
 			}
 
 			conn.close();
